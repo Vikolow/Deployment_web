@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:latest
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: simple_attendance_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 1234
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql:/docker-entrypoint-initdb.d  # Asegúrate de tener archivos de inicialización en ./mysql
+    networks:
+      - webnet
+    ports:
+      - "3306:3306"  # Exponer el puerto MySQL si deseas acceder desde fuera del contenedor
+
+  php-app:
+    build: ./php
+    container_name: php-app
+    depends_on:
+      - db
+    networks:
+      - webnet
+    ports:
+      - "8000:80"
+    restart: always
+
+  nginx:
+    build: ./nginx
+    container_name: nginx-proxy
+    depends_on:
+      - php-app
+    networks:
+      - webnet
+    ports:
+      - "80:80"
+
+volumes:
+  mysql_data:
+
+networks:
+  webnet:
